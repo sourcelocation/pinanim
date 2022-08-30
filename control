@@ -1,6 +1,6 @@
 Package: net.sourceloc.pinanim
 Name: PinAnim
-Version: 1.0
+Version: 1.1
 Architecture: iphoneos-arm
 Description: Animations for Pin dots
 Maintainer: sourcelocation
