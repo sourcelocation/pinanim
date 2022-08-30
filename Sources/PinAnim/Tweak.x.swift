@@ -3,7 +3,7 @@ import PinAnimC
 
 class PasscodeDotHook: ClassHook<SBSimplePasscodeEntryFieldButton> {
     func setRevealed(_ revealed: Bool, animated: Bool, delay: CGFloat) {
-        guard TweakPreferences.shared.enabled.boolValue && TweakPreferences.shared.preferences.bool(forKey: "preferencesShown") else { orig.setRevealed(revealed, animated: animated, delay: delay); return }
+        guard TweakPreferences.shared.enabled.boolValue else { orig.setRevealed(revealed, animated: animated, delay: delay); return }
         orig.setRevealed(revealed, animated: TweakPreferences.shared.animation == .hidden ? false : animated, delay: delay)
         target.superview?.superview?.superview?.superview?.clipsToBounds = false
         if !(TweakPreferences.shared.waveOnUnlock.boolValue && dotI() == dotCount() - 1) {
@@ -13,7 +13,7 @@ class PasscodeDotHook: ClassHook<SBSimplePasscodeEntryFieldButton> {
 
     func layoutSubviews() {
         orig.layoutSubviews()
-        guard TweakPreferences.shared.enabled.boolValue && TweakPreferences.shared.preferences.bool(forKey: "preferencesShown") else { return }
+        guard TweakPreferences.shared.enabled.boolValue else { return }
         if TweakPreferences.shared.animation == .hidden && !Ivars<Bool>(target)._revealed {
             target.alpha = 0
         }
@@ -68,8 +68,7 @@ class CSPasscodeViewControllerHook: ClassHook<CSPasscodeViewController> {
     func passcodeLockViewPasscodeDidChange(_ arg1: AnyObject) {
         orig.passcodeLockViewPasscodeDidChange(arg1)
 
-        guard TweakPreferences.shared.enabled.boolValue &&
-            TweakPreferences.shared.preferences.bool(forKey: "preferencesShown") && 
+        guard TweakPreferences.shared.enabled.boolValue && 
             TweakPreferences.shared.waveOnUnlock.boolValue else { return }
 
         let keypad = Dynamic.convert(arg1, to: SBUIPasscodeLockViewSimpleFixedDigitKeypad.self)
@@ -88,17 +87,5 @@ class CSPasscodeViewControllerHook: ClassHook<CSPasscodeViewController> {
                 }
             }
         } 
-    }
-}
-
-class SpringBoardHook: ClassHook<SpringBoard> {
-    func applicationDidFinishLaunching(_ application : AnyObject) {
-        orig.applicationDidFinishLaunching(application)
-        
-        if !TweakPreferences.shared.preferences.bool(forKey: "preferencesShown") {
-            let alert = UIAlertController(title: "PinAnim installed! 🎉", message: "Please go to Settings to enable the tweak", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-            UIApplication.shared.windows[0].rootViewController?.present(alert, animated: true)
-        }
     }
 }

@@ -12,7 +12,7 @@
 			<key>headerCellClass</key>
 			<string>HBPackageNameHeaderCell</string>
 			<key>icon</key>
-			<string>icon.png</string>
+			<string>PinAnimIcon.png</string>
 			<key>packageIdentifier</key>
 			<string>net.sourceloc.pinanim</string>
 		</dict>
@@ -28,7 +28,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<false/>
+			<true/>
 			<key>defaults</key>
 			<string>net.sourceloc.pinanimpreferences</string>
 			<key>key</key>
@@ -202,7 +202,7 @@
 			<key>cellClass</key>
 			<string>HBLinkTableCell</string>
 			<key>icon</key>
-			<string>github.png</string>
+			<string>PinAnimGithub.png</string>
 			<key>label</key>
 			<string>Source Code</string>
 			<key>url</key>
@@ -220,7 +220,7 @@
 			<key>cellClass</key>
 			<string>HBLinkTableCell</string>
 			<key>icon</key>
-			<string>pfp.png</string>
+			<string>Sourcelocation.png</string>
 			<key>label</key>
 			<string>Want to recreate this tweak?</string>
 			<key>url</key>

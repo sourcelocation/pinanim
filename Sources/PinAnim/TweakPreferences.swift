@@ -5,7 +5,7 @@ class TweakPreferences {
     static let shared = TweakPreferences()
     
     let preferences = HBPreferences(identifier: "net.sourceloc.pinanimpreferences")
-    var enabled: ObjCBool = false
+    var enabled: ObjCBool = true
     var transitionRaw: AnyObject? = "Ease Out" as AnyObject
     var animationRaw: AnyObject? = "Bounce" as AnyObject
     var animationStrength: Double = 1
@@ -15,7 +15,7 @@ class TweakPreferences {
     
     private init() {
         preferences.register(defaults: [
-            "enabled" : false,
+            "enabled" : true,
             "transition" : "Ease Out",
             "animation" : "Bounce",
             "animationStrength" : 1.0,
@@ -23,7 +23,7 @@ class TweakPreferences {
             "waveOnUnlock" : true,
             "bounceDownOnDelete" : true,
         ])
-        preferences.register(&enabled, default: false, forKey: "enabled")
+        preferences.register(&enabled, default: true, forKey: "enabled")
         preferences.register(&transitionRaw, default: "Ease Out", forKey: "transition")
         preferences.register(&animationRaw, default: "Bounce", forKey: "animation")
         preferences.register(&animationStrength, default: 1.0, forKey: "animationStrength")
