@@ -1,9 +1,9 @@
 Package: net.sourceloc.pinanim
 Name: PinAnim
-Version: 1.1
+Version: 2.0
 Architecture: iphoneos-arm
 Description: Animations for Pin dots
 Maintainer: sourcelocation
 Author: sourcelocation
 Section: Tweaks
-Depends: ${ORION}, firmware (>= 14.0), ws.hbang.common (>= 1.17)
+Depends: ${ORION}, firmware (>= 14.0), com.ginsu.comet

@@ -1,52 +1,97 @@
 import Orion
 import PinAnimC
 
+
+final class KickStart: Tweak {
+    init() {
+        remLog("kickstart")
+        
+        do {
+            try TweakPreferences.shared.loadSettings()
+        } catch {
+            remLog(error.localizedDescription)
+        }
+        
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let name = "net.sourceloc.pinanim.prefs/Update" as CFString
+        let observer = UnsafeMutableRawPointer(Unmanaged.passRetained(self).toOpaque())
+
+        CFNotificationCenterAddObserver(center, observer, { center, observer, name, object, userInfo in
+            remLog("relo")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: {
+                reloadSettings()
+            })
+        }, name, nil, .deliverImmediately)
+    }
+}
+
+
+func reloadSettings() {
+    remLog("ReloadSettings 2")
+    do {
+        try TweakPreferences.shared.loadSettings()
+    } catch {
+        remLog("Failed to load settings: \(error)")
+        remLog(error)
+    }
+}
+
 class PasscodeDotHook: ClassHook<SBSimplePasscodeEntryFieldButton> {
     func setRevealed(_ revealed: Bool, animated: Bool, delay: CGFloat) {
-        guard TweakPreferences.shared.enabled.boolValue else { orig.setRevealed(revealed, animated: animated, delay: delay); return }
-        orig.setRevealed(revealed, animated: TweakPreferences.shared.animation == .hidden ? false : animated, delay: delay)
+        remLog(TweakPreferences.shared.settings.enabled)
+        guard TweakPreferences.shared.settings.enabled else { orig.setRevealed(revealed, animated: animated, delay: delay); return }
+        orig.setRevealed(revealed, animated: TweakPreferences.shared.settings.animation == .hidden ? false : animated, delay: delay)
         target.superview?.superview?.superview?.superview?.clipsToBounds = false
-        if !(TweakPreferences.shared.waveOnUnlock.boolValue && dotI() == dotCount() - 1) {
+        if !(TweakPreferences.shared.settings.waveOnUnlock && dotI() == dotCount() - 1) {
             animate(!revealed)
         }
     }
 
     func layoutSubviews() {
         orig.layoutSubviews()
-        guard TweakPreferences.shared.enabled.boolValue else { return }
-        if TweakPreferences.shared.animation == .hidden && !Ivars<Bool>(target)._revealed {
+        remLog("layoutSubviews")
+        guard TweakPreferences.shared.settings.enabled else { return }
+        remLog(TweakPreferences.shared.settings.enabled)
+        if TweakPreferences.shared.settings.animation == .hidden && !Ivars<Bool>(target)._revealed {
             target.alpha = 0
         }
     }
 
     // orion:new
     func animate(_ deletion: Bool) {
-        if TweakPreferences.shared.animation == .stay && dotI() != dotCount() - 1 {
+        if TweakPreferences.shared.settings.animation == .stay && dotI() != dotCount() - 1 {
             if deletion {
-                self.target.transform = .init(translationX: 0, y: -10 * TweakPreferences.shared.animationStrength)
+                self.target.transform = .init(translationX: 0, y: -10 * TweakPreferences.shared.settings.animationStrength / 100)
             } else {
                 self.target.transform = .init(translationX: 0, y: 0)
             }
         }
-        UIView.animate(withDuration: 0.15 / TweakPreferences.shared.speed, delay: 0, options: TweakPreferences.shared.transition, animations: { [weak self] in
-            switch TweakPreferences.shared.animation {
+        
+        let animation = [
+            PinTransition.easeIn : UIView.AnimationOptions.curveEaseIn,
+            PinTransition.easeOut : UIView.AnimationOptions.curveEaseOut,
+            PinTransition.easeInOut : UIView.AnimationOptions.curveEaseInOut,
+            PinTransition.linear : UIView.AnimationOptions.curveLinear,
+        ][TweakPreferences.shared.settings.transition]!
+        
+        UIView.animate(withDuration: 0.15 / TweakPreferences.shared.settings.speed * 100, delay: 0, options: animation, animations: { [weak self] in
+            switch TweakPreferences.shared.settings.animation {
             case .bounce, .stay:
-                let animationK = (deletion ? (TweakPreferences.shared.bounceDownOnDelete.boolValue ? -1.0 : 0.0) : 1.0)
-                if TweakPreferences.shared.animation == .stay && deletion {
+                let animationK = (deletion ? (TweakPreferences.shared.settings.bounceDownOnDelete ? -1.0 : 0.0) : 1.0)
+                if TweakPreferences.shared.settings.animation == .stay && deletion {
                     self?.target.transform = .init(translationX: 0, y: 0)
                 } else {
-                    self?.target.transform = .init(translationX: 0, y: -10 * TweakPreferences.shared.animationStrength * animationK)
+                    self?.target.transform = .init(translationX: 0, y: -10 * TweakPreferences.shared.settings.animationStrength * animationK / 100)
                 }
             case .hidden:
                 self?.target.alpha = deletion ? 0 : 1
             case .scale:
-                let dotScale = TweakPreferences.shared.animationStrength * (deletion ? (TweakPreferences.shared.bounceDownOnDelete.boolValue ? 0.7 : 1) : 0.4)
+                let dotScale = TweakPreferences.shared.settings.animationStrength / 100 * (deletion ? (TweakPreferences.shared.settings.bounceDownOnDelete ? 0.7 : 1) : 0.4)
                 self?.target.transform = .init(scaleX: dotScale, y: dotScale)
-            default: break
             }
         }, completion: { animationCompleted in
-            guard TweakPreferences.shared.animation != .stay && animationCompleted else { return }
-            UIView.animate(withDuration: 0.15 / TweakPreferences.shared.speed, delay: 0, options: TweakPreferences.shared.transition, animations: { [weak self] in
+            guard TweakPreferences.shared.settings.animation != .stay && animationCompleted else { return }
+            UIView.animate(withDuration: 0.15 / TweakPreferences.shared.settings.speed * 100, delay: 0, options: animation, animations: { [weak self] in
                 self?.target.transform = .init(translationX: 0, y: 0)
             })
         })
@@ -68,8 +113,10 @@ class CSPasscodeViewControllerHook: ClassHook<CSPasscodeViewController> {
     func passcodeLockViewPasscodeDidChange(_ arg1: AnyObject) {
         orig.passcodeLockViewPasscodeDidChange(arg1)
 
-        guard TweakPreferences.shared.enabled.boolValue && 
-            TweakPreferences.shared.waveOnUnlock.boolValue else { return }
+        guard TweakPreferences.shared.settings.enabled &&
+            TweakPreferences.shared.settings.waveOnUnlock else { return }
+        
+        UIImpactFeedbackGenerator(style: .init(rawValue: TweakPreferences.shared.settings.hapticFeedback)!).impactOccurred()
 
         let keypad = Dynamic.convert(arg1, to: SBUIPasscodeLockViewSimpleFixedDigitKeypad.self)
 
@@ -78,10 +125,10 @@ class CSPasscodeViewControllerHook: ClassHook<CSPasscodeViewController> {
                 if let entryField = s2 as? SBUISimpleFixedDigitPasscodeEntryField {
                     let dots = Ivars<NSMutableArray>(entryField)._characterIndicators as! [SBSimplePasscodeEntryFieldButton]
                     if Ivars<Bool>(dots.last!)._revealed {
-                        for (i,dot) in dots.enumerated() {
+                        for (_,dot) in dots.enumerated() {
                             dot.transform = CGAffineTransform(scaleX: 1, y: 1)
                             dot.layer.removeAllAnimations()
-                            dot.animate((TweakPreferences.shared.animation == .stay || TweakPreferences.shared.animation == .hidden) ? true : false)
+                            dot.animate((TweakPreferences.shared.settings.animation == .stay || TweakPreferences.shared.settings.animation == .hidden) ? true : false)
                         }
                     }
                 }

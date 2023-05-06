@@ -1,0 +1,4 @@
+module PinAnimPrefsC {
+    umbrella "."
+    export *
+}

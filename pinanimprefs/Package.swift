@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.2
 
 import PackageDescription
 import Foundation
@@ -44,7 +44,7 @@ let conf = TheosConfiguration(at: ".theos/spm_config")
 let theosPath = conf.theos
 let sdk = conf.sdk
 let resourceDir = conf.swiftResourceDir
-let deploymentTarget = "14.0"
+let deploymentTarget = conf.deploymentTarget
 let triple = "arm64-apple-ios\(deploymentTarget)"
 
 let libFlags: [String] = [
@@ -64,27 +64,25 @@ let swiftFlags: [String] = libFlags + [
     "-target", triple, "-sdk", sdk, "-resource-dir", resourceDir,
 ]
 
-let tweakName = "PinAnim"
-
 let package = Package(
-    name: tweakName,
-    platforms: [.iOS(deploymentTarget)],
+    name: "PinAnimPrefs",
+    platforms: [.iOS("14.0")],
     products: [
         .library(
-            name: tweakName,
-            targets: [tweakName]
-        )
+            name: "PinAnimPrefs",
+            targets: ["PinAnimPrefs"]
+        ),
     ],
     targets: [
         .target(
-            name: "\(tweakName)C",
+            name: "PinAnimPrefsC",
             cSettings: [.unsafeFlags(cFlags)],
             cxxSettings: [.unsafeFlags(cxxFlags)]
         ),
         .target(
-            name: tweakName,
-            dependencies: [.byName(name: "\(tweakName)C")],
+            name: "PinAnimPrefs",
+            dependencies: ["PinAnimPrefsC"],
             swiftSettings: [.unsafeFlags(swiftFlags)]
-        )
+        ),
     ]
 )
